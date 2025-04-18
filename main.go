@@ -1,7 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/justindwlee/bitcoinClone/person"
+)
+
+
 
 func main(){
-	fmt.Println("hello world")
+	nico := person.Person{}
+	nico.SetName("nico")
+	nico.SetAge(33)
+	fmt.Println(nico)
 }
