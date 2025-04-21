@@ -3,14 +3,17 @@ package main
 import (
 	"fmt"
 
-	"github.com/justindwlee/bitcoinClone/person"
+	"github.com/justindwlee/bitcoinClone/blockchain"
 )
 
 
-
 func main(){
-	nico := person.Person{}
-	nico.SetName("nico")
-	nico.SetAge(33)
-	fmt.Println(nico)
+	chain := blockchain.GetBlockchain()
+	chain.AddBlock("Second Block")
+	chain.AddBlock("Third Block")
+	for _, block := range chain.AllBlocks() {
+		fmt.Printf("Data: %s\n", block.Data)
+		fmt.Printf("Hash: %s\n", block.Hash)
+		fmt.Printf("PrevHash: %s\n", block.PrevHash)
+	}
 }
