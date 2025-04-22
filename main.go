@@ -1,9 +1,12 @@
 package main
 
-import "github.com/justindwlee/bitcoinClone/explorer"
+import (
+	"github.com/justindwlee/bitcoinClone/rest"
+)
 
 
 
 func main(){
-	explorer.Start()
+	rest.Start(4000)
 }
+
