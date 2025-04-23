@@ -1,12 +1,10 @@
 package main
 
-import (
-	"github.com/justindwlee/bitcoinClone/rest"
-)
+import "github.com/justindwlee/bitcoinClone/cli"
 
 
 
 func main(){
-	rest.Start(4000)
+	cli.Start()
 }
 
