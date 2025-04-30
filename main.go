@@ -1,14 +1,12 @@
 package main
 
 import (
-	"github.com/justindwlee/bitcoinClone/cli"
-	"github.com/justindwlee/bitcoinClone/db"
+	"github.com/justindwlee/bitcoinClone/wallet"
 )
 
 
 
 func main(){
-	defer db.Close()
-	cli.Start()
+	wallet.Start()
 }
 
