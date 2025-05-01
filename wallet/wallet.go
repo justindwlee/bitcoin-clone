@@ -2,11 +2,10 @@ package wallet
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/x509"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 
 	"github.com/justindwlee/bitcoinClone/utils"
 )
@@ -18,23 +17,25 @@ const (
 )
 
 func Start(){
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	privByte, err := hex.DecodeString(privateKey)
 	utils.HandleErr(err)
 
-
-	keyAsBytes, err := x509.MarshalECPrivateKey(privateKey)
-	fmt.Printf("%x\n\n", keyAsBytes)
-
+	private, err := x509.ParseECPrivateKey(privByte)
 	utils.HandleErr(err)
 
-	hashAsBytes, err := hex.DecodeString(hashedMessage)
+	sigBytes, err := hex.DecodeString(signature)
 	utils.HandleErr(err)
 
-	r, s, err := ecdsa.Sign(rand.Reader, privateKey, hashAsBytes)
+	rBytes := sigBytes[:len(sigBytes)/2]
+	sBytes := sigBytes[len(sigBytes)/2:]
+	
+	var bigR, bigS = big.Int{}, big.Int{}
+	bigR.SetBytes(rBytes)
+	bigS.SetBytes(sBytes)
+
+	hashBytes, err := hex.DecodeString(hashedMessage)
 	utils.HandleErr(err)
 
-	signature := append(r.Bytes(), s.Bytes()...)
-
-	fmt.Printf("%x\n", signature)
-
+	ok := ecdsa.Verify(&private.PublicKey, hashBytes, &bigR, &bigS)
+	fmt.Println(ok)
 }
