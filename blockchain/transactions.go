@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/justindwlee/bitcoinClone/utils"
+	"github.com/justindwlee/bitcoinClone/wallet"
 )
 
 const (
@@ -111,7 +112,7 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 }
 
 func (m *mempool) AddTx(to string, amount int) error{
-	tx, err := makeTx("nico", to, amount)
+	tx, err := makeTx(wallet.Wallet().Address, to, amount)
 	if err != nil {
 		return err
 	}
@@ -120,7 +121,7 @@ func (m *mempool) AddTx(to string, amount int) error{
 }
 
 func (m *mempool) TxToConfirm() []*Tx {
-	coinbaseTx := makeCoinbaseTx("nico")
+	coinbaseTx := makeCoinbaseTx(wallet.Wallet().Address)
 	txs := m.Txs
 	txs = append(txs, coinbaseTx)
 	m.Txs = nil
