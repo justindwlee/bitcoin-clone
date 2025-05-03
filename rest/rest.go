@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/justindwlee/bitcoinClone/blockchain"
 	"github.com/justindwlee/bitcoinClone/utils"
+	"github.com/justindwlee/bitcoinClone/wallet"
 )
 
 var port string
@@ -30,6 +31,10 @@ type urlDescription struct {
 type balanceResponse struct {
 	Address string `json:"address"`
 	Balance int `json:"balance"`
+}
+
+type myWalletResponse struct {
+	Address string `json:"address"`
 }
 
 type errorResponse struct {
@@ -81,7 +86,7 @@ func documentation(w http.ResponseWriter, r *http.Request){
 func blocks(w http.ResponseWriter, r *http.Request){
 	switch r.Method {
 	case "GET":
-		json.NewEncoder(w).Encode(blockchain.Blockchain())
+		json.NewEncoder(w).Encode(blockchain.Blocks(blockchain.Blockchain()))
 	case "POST":
 		blockchain.Blockchain().AddBlock()
 		w.WriteHeader(http.StatusCreated)
@@ -131,6 +136,12 @@ func mempool(w http.ResponseWriter, r *http.Request) {
 	utils.HandleErr(json.NewEncoder(w).Encode(blockchain.Mempool.Txs))
 }
 
+func myWallet(w http.ResponseWriter, r *http.Request) {
+	address := wallet.Wallet().Address
+	// utils.HandleErr(json.NewEncoder(w).Encode(myWalletResponse{Address: address}))
+	utils.HandleErr(json.NewEncoder(w).Encode(struct{Address string `json="address"`}{Address: address}))
+}
+
 func transactions(w http.ResponseWriter, r *http.Request) {
 	var payload addTxPayload
 	utils.HandleErr(json.NewDecoder(r.Body).Decode(&payload))
@@ -151,6 +162,7 @@ func Start(aPort int){
 	router.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
 	router.HandleFunc("/balance/{address}", balance).Methods("GET")
 	router.HandleFunc("/mempool", mempool).Methods("GET")
+	router.HandleFunc("/wallet", myWallet).Methods("GET")
 	router.HandleFunc("/transactions", transactions).Methods("POST")
 	fmt.Printf("Listening on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
