@@ -1,14 +1,34 @@
 package main
 
 import (
-	"github.com/justindwlee/bitcoinClone/cli"
-	"github.com/justindwlee/bitcoinClone/db"
+	"fmt"
+	"time"
 )
 
+func send(c chan<- int) {
+	for i := range [10]int{} {
+		fmt.Printf(">>sending %d<<\n", i)
+		c <- i
+		fmt.Printf(">>sent %d<<\n", i)
+	}
+	close(c)
+}
 
+func receive(c <-chan int) {
+	for {
+		time.Sleep(5 * time.Second)
+		a, ok := <- c
+		if !ok {
+			fmt.Println("done!")
+			break
+		}
+		fmt.Printf("|| received %d ||\n", a)
+	}
+}
 
 func main(){
-	defer db.Close()
-	cli.Start()
+	c := make(chan int, 10)
+	go send(c)
+	receive(c)
 }
 
