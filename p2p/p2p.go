@@ -12,17 +12,20 @@ var upgrader = websocket.Upgrader{}
 
 func Upgrade(w http.ResponseWriter, r *http.Request){
 	// Port :3000 will upgrade the request from :4000
+	openPort := r.URL.Query().Get("openPort")
+	ip  := utils.Splitter(r.RemoteAddr, ":", 0)
 	upgrader.CheckOrigin = func(r *http.Request) bool {
-		return true
+		return openPort != "" && ip != ""
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	utils.HandleErr(err)
-	initPeer(conn, "asdf", "Asdf")
+	initPeer(conn, ip, openPort)
 }
 
-func AddPeer(address string, port string){
+func AddPeer(address string, port, openPort string){
 	// Port :4000 is requesting an upgrade from the port :3000
-	conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s:%s/ws", address, port), nil)
+	conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s:%s/ws?openPort=%s", address, port, openPort[1:]), nil)
 	utils.HandleErr(err)
-	initPeer(conn, address, port)
+	p := initPeer(conn, address, port)
+	sendNewestBlock(p)
 }
