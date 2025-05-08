@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/justindwlee/bitcoinClone/blockchain"
 	"github.com/justindwlee/bitcoinClone/utils"
@@ -21,25 +22,54 @@ type Message struct {
 	Payload []byte
 }
 
-func (m *Message) addPayload(p interface{}){
-	b, err := json.Marshal(p)
-	utils.HandleErr(err)
-	m.Payload = b
-}
+
 
 func makeMessage(kind MessageKind, payload interface{}) []byte {
 	m := Message {
 		Kind: kind,
+		Payload: utils.ToJson(payload),
 	}
-	m.addPayload(payload)
-	mJson, err := json.Marshal(m)
-	utils.HandleErr(err)
-	return mJson
+	return utils.ToJson(m)
 }
 
 func sendNewestBlock(p *peer){
+	fmt.Printf("Sending newest block to %s\n", p.key)
 	b, err := blockchain.FindBlock(blockchain.Blockchain().NewestHash)
 	utils.HandleErr(err)
 	m := makeMessage(MessageNewestBlock, b)
 	p.inbox <- m
+}
+
+func requestAllBlocks(p *peer){
+	m := makeMessage(MessageAllBlocksRequest, nil)
+	p.inbox <- m
+}
+
+func sendAllBlocks(p *peer) {
+	m := makeMessage(MessageAllBlocksResponse, blockchain.Blocks(blockchain.Blockchain()))
+	p.inbox <- m
+}
+
+func handleMsg(m *Message, p *peer) {
+	switch m.Kind {
+	case MessageNewestBlock:
+		fmt.Printf("Just received the newest block from %s\n", p.key)
+		var payload blockchain.Block
+		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
+		if payload.Height >= blockchain.Blockchain().Height {
+			fmt.Printf("Requesting all blocks from %s\n", p.key)
+			requestAllBlocks(p)
+		} else {
+			fmt.Printf("Sending newest block to %s\n", p.key)
+			sendNewestBlock(p)
+		}
+	case MessageAllBlocksRequest:
+		fmt.Printf("%s wants all the blocks\n", p.key)
+		sendAllBlocks(p)
+	case MessageAllBlocksResponse:
+		fmt.Printf("Received all the blocks from %s\n", p.key)
+		var payload []*blockchain.Block
+		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
+
+	}
 }
